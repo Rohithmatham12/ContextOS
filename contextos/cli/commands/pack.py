@@ -151,7 +151,11 @@ def pack_command(
         )
 
     token_est = estimate_tokens(content)
-    console.print(f"  Tokens (pack): [magenta]~{token_est:,}[/magenta]")
+    console.print(
+        f"  Context files: [magenta]~{selection.used_tokens:,}[/magenta] tokens"
+        f"  (budget: {budget:,})"
+    )
+    console.print(f"  Pack total   : [magenta]~{token_est:,}[/magenta] tokens (incl. metadata)")
     console.print(
         f"  Selected     : [cyan]{len(selection.selected)}[/cyan] files  "
         f"([yellow]{len(selection.excluded)}[/yellow] excluded)"

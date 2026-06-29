@@ -17,7 +17,7 @@ Goal: working CLI that produces useful context packs, no optional dependencies r
 - [x] Typer CLI: `init`, `scan`, `task`, `pack`, `export`, `memory` commands
 - [x] Example projects: `python_fastapi`, `react_typescript`, `monorepo`
 - [x] Test suite: 930 tests, 96% coverage
-- [x] `pyproject.toml`, MIT license, GitHub Actions CI
+- [x] `pyproject.toml`, Apache-2.0 license, GitHub Actions CI
 
 ---
 
@@ -87,7 +87,7 @@ These will not be added regardless of demand. They contradict the core design.
 | Context sharing between users | Same concern |
 | LLM calls during selection | Defeats the point; adds cost and latency |
 | Executing repo code during analysis | Safety risk, unpredictable side effects |
-| Paid features | ContextOS is MIT and will stay that way |
+| Paid features | ContextOS is Apache-2.0 and will stay that way |
 | Telemetry or analytics | No accounts, no tracking |
 | IDE integration beyond VS Code stub | Scope creep; community can build plugins |
 

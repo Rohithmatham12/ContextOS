@@ -1,7 +1,7 @@
 # ContextOS
 
 [![CI](https://github.com/Rohithmatham12/ContextOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Rohithmatham12/ContextOS/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 **A context operating system for AI coding agents.**
@@ -13,6 +13,61 @@ your repo  ──►  contextos pack --task "fix auth bug" --budget 8000  ──
 ```
 
 No LLM calls. No network. No token waste.
+
+![ContextOS demo](demo/demo.gif)
+
+---
+
+## Demo — Real Repo (FastAPI)
+
+Running ContextOS against the [FastAPI](https://github.com/fastapi/fastapi) source:
+
+```
+$ contextos init
+$ contextos scan
+
+Scanning /fastapi …
+
+Files indexed : 2,811
+Files skipped : 194
+Token estimate : ~5,066,968
+
+  Language breakdown
+┏━━━━━━━━━━━━┳━━━━━━━┓
+┃ Language   ┃ Files ┃
+┡━━━━━━━━━━━━╇━━━━━━━┩
+│ Markdown   │  1563 │
+│ Python     │  1129 │
+│ YAML       │    43 │
+│ Shell      │     5 │
+└────────────┴───────┘
+
+$ contextos pack . \
+    --task "fix dependency injection bug where nested dependencies are resolved twice" \
+    --budget 8000
+
+Packing /fastapi
+  Task         : fix dependency injection bug where nested dependencies are resolved twice
+  Budget       : 8,000 tokens
+  Format       : md
+  ⚠  141 secret(s) detected and redacted with [REDACTED_*]
+  Context files: ~7,998 tokens  (budget: 8,000)
+  Pack total   : ~65,151 tokens (incl. metadata)
+  Selected     : 191 files  (2,620 excluded)
+
+✓ Pack written to .contextos/context_pack.md
+```
+
+Top-ranked files in the output (keyword + import-centrality scoring):
+
+| File | Score | Reason |
+|------|-------|--------|
+| `fastapi/dependencies/utils.py` | 31.2 | keyword: dependencies, inject; 28 dependents |
+| `fastapi/__init__.py` | 25.4 | import centrality: 31 files depend on it |
+| `tests/test_dependency_duplicates.py` | 18.9 | keyword: dependency, duplicate |
+| `fastapi/routing.py` | 14.1 | keyword: inject; 12 dependents |
+
+**141 secrets auto-redacted** — FastAPI's docs contain many example JWT tokens and API keys. All were replaced with `[REDACTED_*]` before the pack was written.
 
 ---
 

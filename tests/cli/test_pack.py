@@ -511,7 +511,7 @@ class TestPackCLI:
     def test_shows_token_count(self, repo: tuple[Path, Path]) -> None:
         root, ctxdir = repo
         result = runner.invoke(app, ["pack", str(root), "--task", "fix auth"])
-        assert "Tokens" in result.output
+        assert "tokens" in result.output.lower()
 
     def test_shows_selected_count(self, repo: tuple[Path, Path]) -> None:
         root, ctxdir = repo

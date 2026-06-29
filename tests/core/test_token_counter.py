@@ -252,7 +252,7 @@ class TestCLITokenOutput:
             app, ["pack", str(tmp_path), "--task", "test", "--budget", "2000"]
         )
         assert result.exit_code == 0
-        assert "Tokens" in result.output
+        assert "tokens" in result.output.lower()
 
     def test_scan_no_files_no_token_line(self, tmp_path: Path) -> None:
         from typer.testing import CliRunner

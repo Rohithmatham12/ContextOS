@@ -43,6 +43,17 @@ source .venv/bin/activate        # macOS / Linux
 pip install contextos
 ```
 
+## Optional Feature Sets
+
+Install optional extras with pip's bracket syntax:
+
+```bash
+pip install "contextos[ast]"       # tree-sitter symbol extraction (better ranking)
+pip install "contextos[tokens]"    # tiktoken for accurate token counting
+pip install "contextos[headroom]"  # Headroom compression support
+pip install "contextos[all]"       # everything above
+```
+
 ## Optional Dependencies
 
 ### tiktoken (accurate token counting)

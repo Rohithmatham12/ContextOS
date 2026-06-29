@@ -187,6 +187,11 @@ def _extract_python(content: str, path: Path) -> _Extracted:  # noqa: ARG001
             symbols.append(node.name)
             if not node.name.startswith("_"):
                 exports.append(f"class {node.name}")
+            # Include public methods — they're the symbols most useful for task matching
+            for child in node.body:
+                if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    if not child.name.startswith("_") or child.name in ("__init__", "__call__"):
+                        symbols.append(child.name)
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id.isupper() and len(target.id) > 1:
@@ -285,6 +290,17 @@ def _extract_js(content: str, path: Path) -> _Extracted:  # noqa: ARG001
     # UPPER_CASE constants
     for m in re.finditer(r"^(?:const|let|var)\s+([A-Z][A-Z0-9_]{1,})\s*=", content, re.MULTILINE):
         symbols.append(m.group(1))
+
+    # Augment with tree-sitter for method-level symbols (optional dep)
+    try:
+        from contextos.core.ast_extractor import extract_symbols
+
+        lang = "typescript" if path.suffix in (".ts", ".tsx") else "javascript"
+        ast_syms = extract_symbols(content, lang, str(path))
+        for sym in ast_syms.symbols:
+            symbols.append(sym.name)
+    except Exception:
+        pass
 
     return _Extracted(
         imports=sorted(set(imports)),
