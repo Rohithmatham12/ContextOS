@@ -1,0 +1,17 @@
+{
+  "name": "@example/api",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@example/shared": "workspace:*",
+    "express": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.0"
+  }
+}
