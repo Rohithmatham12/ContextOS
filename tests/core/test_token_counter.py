@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 from contextos.core.token_counter import (
     _fallback,
     estimate_file_tokens,
@@ -74,27 +76,22 @@ class TestEstimateTokens:
         long = estimate_tokens("hello " * 200)
         assert long > short * 100
 
-    def test_tiktoken_unavailable_falls_back_gracefully(self, monkeypatch: object) -> None:
-        assert isinstance(monkeypatch, __import__("pytest").MonkeyPatch)
-        import pytest
-
-        mp: pytest.MonkeyPatch = monkeypatch  # type: ignore[assignment]
-        mp.setitem(sys.modules, "tiktoken", None)
+    def test_tiktoken_unavailable_falls_back_gracefully(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setitem(sys.modules, "tiktoken", None)
         # Should not raise; fallback path used
         result = estimate_tokens("hello world code")
         assert result > 0
 
-    def test_tiktoken_exception_falls_back(self, monkeypatch: object) -> None:
+    def test_tiktoken_exception_falls_back(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Simulate tiktoken raising an unexpected error."""
-        import pytest
-
-        mp: pytest.MonkeyPatch = monkeypatch  # type: ignore[assignment]
 
         class _BrokenTiktoken:
             def get_encoding(self, name: str) -> object:
                 raise RuntimeError("encoding unavailable")
 
-        mp.setitem(sys.modules, "tiktoken", _BrokenTiktoken())  # type: ignore[arg-type]
+        monkeypatch.setitem(sys.modules, "tiktoken", _BrokenTiktoken())
         result = estimate_tokens("hello world")
         assert result > 0
 
@@ -205,37 +202,27 @@ class TestEstimateFromBytes:
 class TestFallbackMode:
     """All estimate_* functions work correctly when tiktoken is unavailable."""
 
-    def test_estimate_tokens_fallback(self, monkeypatch: object) -> None:
-        import pytest
-
-        mp: pytest.MonkeyPatch = monkeypatch  # type: ignore[assignment]
-        mp.setitem(sys.modules, "tiktoken", None)
+    def test_estimate_tokens_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setitem(sys.modules, "tiktoken", None)
         result = estimate_tokens("def main(): return 42\n")
         # fallback: def, main, return, 42, (, ), :
         assert result >= 5
 
-    def test_estimate_file_tokens_fallback(self, tmp_path: Path, monkeypatch: object) -> None:
-        import pytest
-
-        mp: pytest.MonkeyPatch = monkeypatch  # type: ignore[assignment]
-        mp.setitem(sys.modules, "tiktoken", None)
+    def test_estimate_file_tokens_fallback(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setitem(sys.modules, "tiktoken", None)
         f = tmp_path / "code.py"
         f.write_text("import os\nimport sys\n", encoding="utf-8")
         assert estimate_file_tokens(f) >= 2
 
-    def test_estimate_pack_tokens_fallback(self, monkeypatch: object) -> None:
-        import pytest
-
-        mp: pytest.MonkeyPatch = monkeypatch  # type: ignore[assignment]
-        mp.setitem(sys.modules, "tiktoken", None)
+    def test_estimate_pack_tokens_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setitem(sys.modules, "tiktoken", None)
         result = estimate_pack_tokens("# context pack\ndef foo(): pass\n")
         assert result > 0
 
-    def test_result_matches_fallback_directly(self, monkeypatch: object) -> None:
-        import pytest
-
-        mp: pytest.MonkeyPatch = monkeypatch  # type: ignore[assignment]
-        mp.setitem(sys.modules, "tiktoken", None)
+    def test_result_matches_fallback_directly(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setitem(sys.modules, "tiktoken", None)
         text = "hello world foo bar"
         assert estimate_tokens(text) == _fallback(text)
 

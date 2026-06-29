@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Protocol, cast
 
 import typer
 from rich.console import Console
+
+from contextos.core.context_selector import ContextSelection
+from contextos.exporters.base import ExportConfig
 
 app = typer.Typer(help="Export context packs for specific AI coding tools.")
 console = Console()
@@ -29,6 +32,20 @@ _SENSITIVE_HELP = (
     "[DANGEROUS] Disable secret redaction. Secrets will appear in plain text. "
     "Only use in fully isolated, private environments."
 )
+
+
+class _ExporterModule(Protocol):
+    TOOL_NAME: str
+    FILENAME: str
+
+    def export(
+        self,
+        task: str,
+        repo_root: Path,
+        contextos_dir: Path,
+        *,
+        config: ExportConfig,
+    ) -> tuple[str, ContextSelection]: ...
 
 
 @app.callback()
@@ -210,9 +227,9 @@ def _run_export(
         raise typer.Exit(code=1)
 
     contextos_dir = root / _CONTEXTOS_DIR
-    tool_name: str = getattr(tool_module, "TOOL_NAME", "Unknown")
-    filename: str = getattr(tool_module, "FILENAME", "CONTEXT.md")
-    export_fn = tool_module.export
+    exporter = cast(_ExporterModule, tool_module)
+    tool_name = getattr(exporter, "TOOL_NAME", "Unknown")
+    filename = getattr(exporter, "FILENAME", "CONTEXT.md")
 
     console.print(f"[bold]Exporting[/bold] context for [cyan]{tool_name}[/cyan]")
     console.print(f"  Repo   : {root}")
@@ -233,7 +250,7 @@ def _run_export(
         allow_sensitive=allow_sensitive,
     )
 
-    content, selection = export_fn(task, root, contextos_dir, config=cfg)
+    content, selection = exporter.export(task, root, contextos_dir, config=cfg)
 
     if selection.secret_warnings and not allow_sensitive:
         console.print(

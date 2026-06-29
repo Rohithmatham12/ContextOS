@@ -285,7 +285,9 @@ class TestImplList:
     def test_no_files_no_crash(self, tmp_path: Path) -> None:
         _impl_list(tmp_path)  # no files → no crash
 
-    def test_shows_memory_when_exists(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:  # noqa: ARG002
+    def test_shows_memory_when_exists(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:  # noqa: ARG002
         _impl_add("remember this", tmp_path)
         # _impl_list uses Rich console which bypasses capsys; just verify no crash
         _impl_list(tmp_path)

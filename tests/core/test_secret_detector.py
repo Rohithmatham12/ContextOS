@@ -652,12 +652,15 @@ class TestIntegrationRedaction:
             assert "sk-abcdefghijklmnopqrstuvwxyz" not in out_file.read_text(encoding="utf-8")
 
     def test_secret_warnings_in_selection(self, secret_repo: tuple[Path, Path]) -> None:
-        from contextos.core.context_selector import SelectionConfig, _load_summaries_safe, _select
+        from contextos.core.context_selector import (
+            SelectionConfig,
+            _load_graph_safe,
+            _load_summaries_safe,
+            _select,
+        )
 
         root, ctxdir = secret_repo
         summaries = _load_summaries_safe(ctxdir)
-        from contextos.core.pack_builder import _load_graph_safe
-
         graph = _load_graph_safe(ctxdir)
         cfg = SelectionConfig(budget=8000)
         selection = _select("call openai api", summaries, graph, "", root, cfg)
@@ -678,8 +681,12 @@ class TestIntegrationRedaction:
         summarize_repo(result, output_path=ctxdir / "file_summaries.json")
         write_graph(build_graph(result), ctxdir / "dependency_graph.json")
 
-        from contextos.core.context_selector import SelectionConfig, _load_summaries_safe, _select
-        from contextos.core.pack_builder import _load_graph_safe
+        from contextos.core.context_selector import (
+            SelectionConfig,
+            _load_graph_safe,
+            _load_summaries_safe,
+            _select,
+        )
 
         summaries = _load_summaries_safe(ctxdir)
         graph = _load_graph_safe(ctxdir)

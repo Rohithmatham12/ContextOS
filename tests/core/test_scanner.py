@@ -200,6 +200,12 @@ class TestScanBasic:
         result = scan(tmp_path)
         assert any("utils.py" in f.rel_path for f in result.files)
 
+    def test_relative_paths_use_posix_separators(self, tmp_path: Path) -> None:
+        _write(tmp_path / "apps" / "api" / "main.py", "pass\n")
+        result = scan(tmp_path)
+        assert "apps/api/main.py" in _rel_paths(result)
+        assert not any("\\" in p for p in _rel_paths(result))
+
     def test_line_count_empty_file(self, tmp_path: Path) -> None:
         _write(tmp_path / "empty.py", "")
         result = scan(tmp_path)
@@ -209,6 +215,17 @@ class TestScanBasic:
         _write(tmp_path / "no_nl.py", "x = 1")
         result = scan(tmp_path)
         assert result.files[0].line_count == 1
+
+    def test_monorepo_shape_scanned_deterministically(self, tmp_path: Path) -> None:
+        _write(tmp_path / "apps" / "api" / "main.py", "def api(): pass\n")
+        _write(tmp_path / "apps" / "web" / "index.ts", "export const web = true;\n")
+        _write(tmp_path / "packages" / "shared" / "util.py", "def util(): pass\n")
+        result = scan(tmp_path)
+        assert [f.rel_path for f in result.files] == [
+            "apps/api/main.py",
+            "apps/web/index.ts",
+            "packages/shared/util.py",
+        ]
 
 
 class TestScanSkipBinary:
@@ -255,6 +272,12 @@ class TestScanSkipLargeFile:
         result = scan(tmp_path, config)
         assert "small.txt" in _rel_paths(result)
         assert _skip_reasons(result).get("big.txt") == "too_large"
+
+    def test_large_lockfile_skipped_by_size_limit(self, tmp_path: Path) -> None:
+        (tmp_path / "package-lock.json").write_bytes(b"{" + b'"x":1,' * 200 + b'"z":0}')
+        config = ScanConfig(max_file_bytes=64)
+        result = scan(tmp_path, config)
+        assert _skip_reasons(result).get("package-lock.json") == "too_large"
 
 
 class TestScanSkipEncoding:
@@ -312,6 +335,53 @@ class TestScanIgnoredDirectories:
         _write_bytes(tmp_path / "__pycache__" / "foo.pyc", b"compiled bytecode")
         result = scan(tmp_path)
         assert not any("__pycache__" in s.rel_path for s in result.skipped)
+
+    def test_contextos_directory_not_scanned(self, tmp_path: Path) -> None:
+        _write(tmp_path / ".contextos" / "context_pack.md", "# generated\nSECRET=value\n")
+        _write(tmp_path / "main.py", "def main(): pass\n")
+        result = scan(tmp_path)
+        assert "main.py" in _rel_paths(result)
+        assert not any(p.startswith(".contextos/") for p in _rel_paths(result))
+
+    def test_nested_git_metadata_not_scanned(self, tmp_path: Path) -> None:
+        _write(tmp_path / "third_party" / "lib.py", "def lib(): pass\n")
+        _write(tmp_path / "third_party" / ".git" / "config", "[core]\n")
+        result = scan(tmp_path)
+        assert "third_party/lib.py" in _rel_paths(result)
+        assert not any("/.git/" in p or p.startswith(".git/") for p in _rel_paths(result))
+
+
+class TestScanIgnoredFiles:
+    def test_notebook_skipped_as_generated_file(self, tmp_path: Path) -> None:
+        _write(tmp_path / "analysis.ipynb", '{"cells": [], "metadata": {}}\n')
+        result = scan(tmp_path)
+        assert _skip_reasons(result).get("analysis.ipynb") == "ignored"
+
+    def test_minified_js_skipped_as_generated_file(self, tmp_path: Path) -> None:
+        _write(tmp_path / "app.min.js", "function x(){return 1};" * 100)
+        result = scan(tmp_path)
+        assert _skip_reasons(result).get("app.min.js") == "ignored"
+
+    def test_source_js_next_to_minified_js_still_scanned(self, tmp_path: Path) -> None:
+        _write(tmp_path / "app.js", "export function x() { return 1; }\n")
+        _write(tmp_path / "app.min.js", "function x(){return 1};")
+        result = scan(tmp_path)
+        assert "app.js" in _rel_paths(result)
+        assert "app.min.js" not in _rel_paths(result)
+
+
+class TestScanMaxFiles:
+    def test_max_files_limits_indexed_files(self, tmp_path: Path) -> None:
+        for idx in range(10):
+            _write(tmp_path / f"{idx:02d}.py", "x = 1\n")
+        result = scan(tmp_path, ScanConfig(max_files=3))
+        assert [f.rel_path for f in result.files] == ["00.py", "01.py", "02.py"]
+
+    def test_max_files_none_indexes_all_files(self, tmp_path: Path) -> None:
+        for idx in range(4):
+            _write(tmp_path / f"{idx}.py", "x = 1\n")
+        result = scan(tmp_path, ScanConfig(max_files=None))
+        assert result.total_files == 4
 
 
 class TestScanGitignore:
@@ -380,7 +450,7 @@ class TestScanPermissions:
         os.chmod(secret, 0o000)
         try:
             # Skip test when running as root (root can read any file)
-            if os.getuid() == 0:  # type: ignore[attr-defined]
+            if os.getuid() == 0:
                 pytest.skip("root user can read all files")
             result = scan(tmp_path)
             assert _skip_reasons(result).get("secret.py") == "permission_error"
@@ -392,8 +462,10 @@ class TestScanConfig:
     def test_default_config_reasonable(self) -> None:
         config = ScanConfig()
         assert config.max_file_bytes == 524288
+        assert config.max_files is None
         assert config.respect_gitignore is True
         assert ".git" in config.exclude
+        assert ".contextos" in config.exclude
         assert "node_modules" in config.exclude
 
     def test_always_exclude_immutable(self) -> None:

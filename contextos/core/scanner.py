@@ -11,6 +11,7 @@ from contextos.core.safety import (
     ALWAYS_EXCLUDE,
     detect_language,
     is_binary,
+    is_generated_file,
     is_safe_symlink,
     load_gitignore_patterns,
     matches_gitignore,
@@ -22,6 +23,7 @@ DEFAULT_MAX_FILE_BYTES: int = 524288  # 512 KB
 @dataclass
 class ScanConfig:
     max_file_bytes: int = DEFAULT_MAX_FILE_BYTES
+    max_files: int | None = None
     extra_exclude: frozenset[str] = field(default_factory=frozenset)
     respect_gitignore: bool = True
 
@@ -108,8 +110,10 @@ def scan(root: Path, config: ScanConfig | None = None) -> ScanResult:
         dirnames[:] = sorted(kept)
 
         for filename in sorted(filenames):
+            if config.max_files is not None and len(result.files) >= config.max_files:
+                return result
             path = dir_path / filename
-            rel_path = str(path.relative_to(root))
+            rel_path = path.relative_to(root).as_posix()
             entry = _classify_file(path, rel_path, root, config, gitignore)
             if isinstance(entry, FileEntry):
                 result.files.append(entry)
@@ -128,6 +132,9 @@ def _classify_file(
 ) -> FileEntry | SkippedEntry:
     def skip(reason: str) -> SkippedEntry:
         return SkippedEntry(path=path, rel_path=rel_path, reason=reason)
+
+    if is_generated_file(rel_path):
+        return skip("ignored")
 
     # Per-file gitignore check (directories are pruned earlier, but file patterns still apply)
     if config.respect_gitignore and matches_gitignore(rel_path, gitignore):

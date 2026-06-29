@@ -19,11 +19,14 @@ def list_items(current_user: User = Depends(auth.get_current_user)) -> list[Item
 
 
 @router.post("/", response_model=Item, status_code=201)
-def create_item(
-    body: ItemCreate, current_user: User = Depends(auth.get_current_user)
-) -> Item:
+def create_item(body: ItemCreate, current_user: User = Depends(auth.get_current_user)) -> Item:
     global _next_id
-    item = Item(id=_next_id, title=body.title, description=body.description, owner=current_user.username)
+    item = Item(
+        id=_next_id,
+        title=body.title,
+        description=body.description,
+        owner=current_user.username,
+    )
     _ITEM_STORE[_next_id] = item
     _next_id += 1
     return item

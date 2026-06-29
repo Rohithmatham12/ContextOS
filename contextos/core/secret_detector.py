@@ -234,10 +234,6 @@ def redact_content(text: str) -> tuple[str, list[SecretMatch]]:
             continue
 
         if sp.value_group:
-
-            def _make_repl(pattern: _SecretPattern) -> re.Pattern[str]:
-                return pattern  # capture in closure
-
             p = sp  # closure capture
 
             def _repl(m: re.Match[str], _p: _SecretPattern = p) -> str:

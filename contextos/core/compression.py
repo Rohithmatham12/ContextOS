@@ -7,6 +7,7 @@ Compression is optional and always falls back gracefully.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import cast
 
 
 class CompressionError(Exception):
@@ -70,4 +71,4 @@ def get_provider(name: str, **kwargs: object) -> CompressionProvider:
 
     module = importlib.import_module(module_path)
     cls = getattr(module, class_name)
-    return cls(**kwargs)  # type: ignore[return-value]
+    return cast(CompressionProvider, cls(**kwargs))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -70,6 +71,26 @@ def test_scan_on_valid_repo(tmp_path: Path) -> None:
     (tmp_path / "main.py").write_text("def main(): pass\n", encoding="utf-8")
     result = runner.invoke(app, ["scan", str(tmp_path)])
     assert result.exit_code == 0
+
+
+def test_scan_max_files_limits_written_index(tmp_path: Path) -> None:
+    for idx in range(5):
+        (tmp_path / f"{idx}.py").write_text("x = 1\n", encoding="utf-8")
+    result = runner.invoke(app, ["scan", str(tmp_path), "--max-files", "2"])
+    assert result.exit_code == 0
+    summaries = json.loads((tmp_path / ".contextos" / "file_summaries.json").read_text())
+    assert list(summaries) == ["0.py", "1.py"]
+
+
+def test_repeated_scan_does_not_index_contextos_outputs(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text("def main(): pass\n", encoding="utf-8")
+    first = runner.invoke(app, ["scan", str(tmp_path)])
+    second = runner.invoke(app, ["scan", str(tmp_path)])
+    assert first.exit_code == 0
+    assert second.exit_code == 0
+    summaries = json.loads((tmp_path / ".contextos" / "file_summaries.json").read_text())
+    assert "main.py" in summaries
+    assert not any(path.startswith(".contextos/") for path in summaries)
 
 
 def test_scan_on_nonexistent_path() -> None:

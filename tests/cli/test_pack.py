@@ -340,6 +340,27 @@ class TestOutputFile:
 
 
 class TestAutoScan:
+    def test_pack_empty_repo_writes_pack(self, tmp_path: Path) -> None:
+        repo = tmp_path / "empty"
+        repo.mkdir()
+        ctxdir = repo / ".contextos"
+
+        content, selection = build_pack("inspect empty repo", repo, ctxdir)
+
+        assert selection.selected == []
+        assert "No files selected" in content
+        assert (ctxdir / "context_pack.md").exists()
+
+    def test_pack_repo_without_readme(self, tmp_path: Path) -> None:
+        repo = tmp_path / "no-readme"
+        repo.mkdir()
+        (repo / "main.py").write_text("def main(): pass\n", encoding="utf-8")
+        ctxdir = repo / ".contextos"
+
+        _content, selection = build_pack("main entrypoint", repo, ctxdir)
+
+        assert "main.py" in [item.rel_path for item in selection.selected]
+
     def test_pack_creates_summaries_if_missing(self, tmp_path: Path) -> None:
         repo = tmp_path / "fresh"
         repo.mkdir()
@@ -357,6 +378,50 @@ class TestAutoScan:
         mtime_after = (ctxdir / "file_summaries.json").stat().st_mtime
         # file_summaries.json should NOT be rewritten (existing used as-is)
         assert mtime_after == mtime_before
+
+    def test_pack_recovers_from_corrupted_summaries(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        (repo / "main.py").write_text("def main(): pass\n", encoding="utf-8")
+        ctxdir = repo / ".contextos"
+        ctxdir.mkdir()
+        (ctxdir / "file_summaries.json").write_text("{not json", encoding="utf-8")
+        (ctxdir / "dependency_graph.json").write_text(
+            json.dumps({"nodes": [], "edges": [], "unresolved": {}, "cycles": []}),
+            encoding="utf-8",
+        )
+
+        _content, selection = build_pack("main entrypoint", repo, ctxdir)
+
+        assert "main.py" in json.loads((ctxdir / "file_summaries.json").read_text())
+        assert "main.py" in [item.rel_path for item in selection.selected]
+
+    def test_pack_recovers_from_corrupted_dependency_graph(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        (repo / "main.py").write_text("import os\n\ndef main(): pass\n", encoding="utf-8")
+        ctxdir = repo / ".contextos"
+
+        build_pack("main entrypoint", repo, ctxdir)
+        (ctxdir / "dependency_graph.json").write_text("{not json", encoding="utf-8")
+
+        _content, selection = build_pack("main entrypoint", repo, ctxdir)
+
+        graph = json.loads((ctxdir / "dependency_graph.json").read_text(encoding="utf-8"))
+        assert "nodes" in graph
+        assert "main.py" in [item.rel_path for item in selection.selected]
+
+    def test_repeated_pack_does_not_select_previous_context_pack(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        (repo / "main.py").write_text("def main(): pass\n", encoding="utf-8")
+        ctxdir = repo / ".contextos"
+
+        build_pack("first task", repo, ctxdir)
+        build_pack("context pack main", repo, ctxdir)
+
+        summaries = json.loads((ctxdir / "file_summaries.json").read_text(encoding="utf-8"))
+        assert not any(path.startswith(".contextos/") for path in summaries)
 
 
 # ---------------------------------------------------------------------------
@@ -414,6 +479,12 @@ class TestIsTestFile:
 
     def test_spec_dir(self) -> None:
         assert _is_test_file("spec/auth_spec.js")
+
+    def test_windows_tests_dir(self) -> None:
+        assert _is_test_file(r"tests\test_auth.py")
+
+    def test_windows_normal_file(self) -> None:
+        assert not _is_test_file(r"src\auth\middleware.py")
 
 
 # ---------------------------------------------------------------------------

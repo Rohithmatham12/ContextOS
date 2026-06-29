@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypeAlias
 
 from contextos.core.context_selector import (
     SelectionConfig,
@@ -18,6 +19,9 @@ from contextos.core.context_selector import (
 )
 from contextos.core.dependency_graph import DependencyGraph, DGEdge, DGNode
 from contextos.core.summarizer import FileSummary
+
+ScoreMap: TypeAlias = dict[str, tuple[float, list[str]]]
+RankedFiles: TypeAlias = list[tuple[str, float, list[str]]]
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -223,7 +227,7 @@ class TestScoreFile:
 
 class TestExpandDeps:
     def test_dep_boosted_when_source_high_score(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/main.py": (5.0, ["path:main"]),
             "src/utils.py": (0.0, []),
         }
@@ -233,7 +237,7 @@ class TestExpandDeps:
         assert result["src/utils.py"][0] > 0.0
 
     def test_dep_reason_added(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/main.py": (5.0, ["path:main"]),
             "src/utils.py": (0.0, []),
         }
@@ -244,7 +248,7 @@ class TestExpandDeps:
 
     def test_package_edges_not_boosted(self) -> None:
         # Package imports like "os", "sys" don't appear in summaries
-        scores = {
+        scores: ScoreMap = {
             "src/main.py": (5.0, ["path:main"]),
         }
         graph = DependencyGraph(
@@ -258,7 +262,7 @@ class TestExpandDeps:
         assert "os" not in result
 
     def test_low_score_source_not_expanded(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/main.py": (0.01, []),
             "src/utils.py": (0.0, []),
         }
@@ -272,7 +276,7 @@ class TestExpandDeps:
         assert result == {}
 
     def test_dep_factor_applied(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/main.py": (10.0, []),
             "src/utils.py": (0.0, []),
         }
@@ -283,7 +287,7 @@ class TestExpandDeps:
         assert abs(result["src/utils.py"][0] - 5.0) < 0.01
 
     def test_existing_score_preserved_and_augmented(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/main.py": (10.0, []),
             "src/utils.py": (2.0, ["path:utils"]),
         }
@@ -301,7 +305,7 @@ class TestExpandDeps:
 
 class TestPairTests:
     def test_test_file_boosted(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/auth.py": (5.0, ["path:auth"]),
             "tests/test_auth.py": (0.0, []),
         }
@@ -309,7 +313,7 @@ class TestPairTests:
         assert result["tests/test_auth.py"][0] > 0.0
 
     def test_test_pair_reason_added(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/auth.py": (5.0, ["path:auth"]),
             "tests/test_auth.py": (0.0, []),
         }
@@ -318,7 +322,7 @@ class TestPairTests:
         assert any("test_pair" in r for r in reasons)
 
     def test_same_dir_test_file(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "lib/utils.py": (5.0, []),
             "lib/test_utils.py": (0.0, []),
         }
@@ -326,7 +330,7 @@ class TestPairTests:
         assert result["lib/test_utils.py"][0] > 0.0
 
     def test_suffix_test_file(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "lib/utils.py": (5.0, []),
             "lib/utils_test.py": (0.0, []),
         }
@@ -340,7 +344,7 @@ class TestPairTests:
         assert set(result) == {"src/auth.py"}
 
     def test_low_score_source_not_paired(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/auth.py": (0.0, []),
             "tests/test_auth.py": (0.0, []),
         }
@@ -349,7 +353,7 @@ class TestPairTests:
         assert result["tests/test_auth.py"][0] == 0.0
 
     def test_pair_bonus_value(self) -> None:
-        scores = {
+        scores: ScoreMap = {
             "src/auth.py": (10.0, []),
             "tests/test_auth.py": (1.0, []),
         }
@@ -376,7 +380,7 @@ class TestBudgetEnforcement:
             _write_file(tmp_path / f"file{i}.py", content)
 
         summaries = self._make_summaries([f"file{i}.py" for i in range(5)])
-        ranked = [(f"file{i}.py", float(5 - i), []) for i in range(5)]
+        ranked: RankedFiles = [(f"file{i}.py", float(5 - i), []) for i in range(5)]
         cfg = SelectionConfig(budget=3000)
 
         selected, _, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)
@@ -391,7 +395,7 @@ class TestBudgetEnforcement:
         # Give each file a long export list so even the summary is ~100 tokens
         many_exports = [f"very_long_function_name_export_{i:03d}" for i in range(60)]
         summaries = {f"file{i}.py": _summary(f"file{i}.py", exports=many_exports) for i in range(4)}
-        ranked = [(f"file{i}.py", float(4 - i), []) for i in range(4)]
+        ranked: RankedFiles = [(f"file{i}.py", float(4 - i), []) for i in range(4)]
         cfg = SelectionConfig(budget=150)  # fits at most 1-2 summaries
 
         selected, excluded, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)
@@ -404,7 +408,7 @@ class TestBudgetEnforcement:
             _write_file(tmp_path / name, content)
 
         summaries = self._make_summaries(["high.py", "low.py"])
-        ranked = [("high.py", 10.0, []), ("low.py", 1.0, [])]
+        ranked: RankedFiles = [("high.py", 10.0, []), ("low.py", 1.0, [])]
         cfg = SelectionConfig(budget=800)  # fits only one
 
         selected, excluded, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)
@@ -415,7 +419,7 @@ class TestBudgetEnforcement:
         content = "x = 1\n"  # tiny file, always fits
         _write_file(tmp_path / "small.py", content)
         summaries = {"small.py": _summary("small.py", purpose="does stuff")}
-        ranked = [("small.py", 5.0, [])]
+        ranked: RankedFiles = [("small.py", 5.0, [])]
         cfg = SelectionConfig(budget=5000)
 
         selected, _, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)
@@ -425,7 +429,7 @@ class TestBudgetEnforcement:
         content = "x = 1\n" * 2000  # very large
         _write_file(tmp_path / "big.py", content)
         summaries = {"big.py": _summary("big.py")}
-        ranked = [("big.py", 5.0, [])]
+        ranked: RankedFiles = [("big.py", 5.0, [])]
         cfg = SelectionConfig(budget=300, snippet_lines=20)
 
         selected, excluded, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)
@@ -436,7 +440,7 @@ class TestBudgetEnforcement:
         content = "x = 1\n" * 2000
         _write_file(tmp_path / "big.py", content)
         summaries = {"big.py": _summary("big.py", purpose="important module")}
-        ranked = [("big.py", 5.0, [])]
+        ranked: RankedFiles = [("big.py", 5.0, [])]
         # snippet_lines=5 still large, budget=10 — only summary should fit
         cfg = SelectionConfig(budget=10, snippet_lines=5)
 
@@ -448,7 +452,7 @@ class TestBudgetEnforcement:
     def test_zero_budget_excludes_all(self, tmp_path: Path) -> None:
         _write_file(tmp_path / "f.py", "x = 1\n")
         summaries = {"f.py": _summary("f.py")}
-        ranked = [("f.py", 5.0, [])]
+        ranked: RankedFiles = [("f.py", 5.0, [])]
         cfg = SelectionConfig(budget=0)
 
         selected, excluded, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)
@@ -458,7 +462,7 @@ class TestBudgetEnforcement:
     def test_missing_file_uses_summary(self, tmp_path: Path) -> None:
         # File not on disk but in summaries (e.g. deleted after scan)
         summaries = {"ghost.py": _summary("ghost.py", purpose="phantom module")}
-        ranked = [("ghost.py", 5.0, [])]
+        ranked: RankedFiles = [("ghost.py", 5.0, [])]
         cfg = SelectionConfig(budget=500)
 
         selected, _, _warnings = _enforce_budget(ranked, summaries, tmp_path, cfg)

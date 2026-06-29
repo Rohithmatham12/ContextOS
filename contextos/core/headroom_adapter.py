@@ -27,6 +27,7 @@ ContextOS works fully without Headroom.  Omit ``--compress`` for normal
 from __future__ import annotations
 
 import os
+from typing import Protocol, cast
 
 from contextos.core.compression import CompressionProvider, HeadroomUnavailableError
 
@@ -51,6 +52,10 @@ Make sure the proxy is running:
   headroom serve
 
 Or omit --compress to skip compression entirely."""
+
+
+class _HeadroomModule(Protocol):
+    def compress(self, text: str, *, budget: int, base_url: str) -> str: ...
 
 
 class HeadroomCompressionProvider(CompressionProvider):
@@ -101,11 +106,11 @@ class HeadroomCompressionProvider(CompressionProvider):
         return self._base_url
 
     @staticmethod
-    def _import_headroom() -> object:
+    def _import_headroom() -> _HeadroomModule:
         """Lazy-import ``headroom_ai``.  Raises :class:`HeadroomUnavailableError` if missing."""
         try:
-            import headroom_ai  # type: ignore[import-untyped]
+            import headroom_ai
 
-            return headroom_ai
+            return cast(_HeadroomModule, headroom_ai)
         except ImportError as exc:
             raise HeadroomUnavailableError(_INSTALL_HINT) from exc

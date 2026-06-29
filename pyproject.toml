@@ -6,13 +6,34 @@ build-backend = "hatchling.build"
 name = "contextos"
 version = "0.1.0"
 description = "A context operating system for AI coding agents"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.11"
+keywords = ["ai", "agents", "context", "cli", "developer-tools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
 dependencies = [
     "typer>=0.12.0",
     "rich>=13.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Rohithmatham12/ContextOS"
+Repository = "https://github.com/Rohithmatham12/ContextOS"
+Issues = "https://github.com/Rohithmatham12/ContextOS/issues"
+Changelog = "https://github.com/Rohithmatham12/ContextOS/blob/master/CHANGELOG.md"
 
 [project.scripts]
 contextos = "contextos.cli.main:app"
@@ -36,6 +57,9 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B", "W"]
 ignore = []
 
+[tool.ruff.lint.per-file-ignores]
+"examples/python_fastapi/app/routes/*.py" = ["B008"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["contextos"]
 
@@ -43,6 +67,7 @@ known-first-party = ["contextos"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
+exclude = ["examples/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

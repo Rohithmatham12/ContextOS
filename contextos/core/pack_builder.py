@@ -315,8 +315,10 @@ def _build_dep_notes(selection: ContextSelection, graph: DependencyGraph) -> str
 
 
 def _is_test_file(rel_path: str) -> bool:
-    name = Path(rel_path).name
-    parts = Path(rel_path).parts
+    normalized = rel_path.replace("\\", "/")
+    path = Path(normalized)
+    name = path.name
+    parts = path.parts
     return (
         name.startswith("test_")
         or name.endswith("_test.py")
@@ -334,10 +336,27 @@ def _is_secret_name(rel_path: str) -> bool:
 
 
 def _ensure_scan(repo_root: Path, contextos_dir: Path) -> None:
-    """Run a scan if file_summaries.json doesn't exist yet."""
-    if (contextos_dir / "file_summaries.json").exists():
+    """Run a scan if scan data is missing or unreadable."""
+    if _scan_data_valid(contextos_dir):
         return
     _run_scan(repo_root, contextos_dir)
+
+
+def _scan_data_valid(contextos_dir: Path) -> bool:
+    summaries_path = contextos_dir / "file_summaries.json"
+    graph_path = contextos_dir / "dependency_graph.json"
+    if not summaries_path.exists() or not graph_path.exists():
+        return False
+
+    from contextos.core.dependency_graph import load_graph
+    from contextos.core.summarizer import load_summaries
+
+    try:
+        load_summaries(summaries_path)
+        load_graph(graph_path)
+    except Exception:  # noqa: BLE001
+        return False
+    return True
 
 
 def _run_scan(repo_root: Path, contextos_dir: Path) -> None:

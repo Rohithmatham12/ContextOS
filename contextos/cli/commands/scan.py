@@ -34,12 +34,16 @@ def scan_command(
         console.print(f"[red]Error:[/red] {repo} is not a directory.")
         raise typer.Exit(code=1)
 
+    if max_files <= 0:
+        console.print("[red]Error:[/red] --max-files must be a positive integer.")
+        raise typer.Exit(code=1)
+
     console.print(f"[bold]Scanning[/bold] {repo} …")
 
-    config = ScanConfig(max_file_bytes=524288)
+    config = ScanConfig(max_file_bytes=524288, max_files=max_files)
     result = scan(repo, config)
 
-    total = min(result.total_files, max_files)
+    total = result.total_files
     console.print(f"\nFiles indexed : [cyan]{total}[/cyan]")
     console.print(f"Files skipped : [yellow]{result.total_skipped}[/yellow]")
 

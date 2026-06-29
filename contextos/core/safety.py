@@ -8,6 +8,7 @@ from pathlib import Path
 # Directories that are always skipped; never configurable away.
 ALWAYS_EXCLUDE: frozenset[str] = frozenset(
     {
+        ".contextos",
         ".git",
         "node_modules",
         "dist",
@@ -24,6 +25,12 @@ ALWAYS_EXCLUDE: frozenset[str] = frozenset(
         "target",
         "vendor",
     }
+)
+
+GENERATED_FILE_PATTERNS: tuple[str, ...] = (
+    "*.ipynb",
+    "*.min.css",
+    "*.min.js",
 )
 
 LANGUAGE_MAP: dict[str, str] = {
@@ -125,6 +132,12 @@ def detect_language(path: Path) -> str:
     if name in {".env", ".env.example", ".env.local"}:
         return "Env"
     return LANGUAGE_MAP.get(path.suffix.lower(), "Unknown")
+
+
+def is_generated_file(rel_str: str) -> bool:
+    """Return True for generated/noisy files that should not enter context packs."""
+    name = Path(rel_str).name
+    return any(fnmatch.fnmatch(name, pat) for pat in GENERATED_FILE_PATTERNS)
 
 
 def load_gitignore_patterns(root: Path) -> list[str]:
