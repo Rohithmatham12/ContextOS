@@ -45,6 +45,21 @@ def set_repo(path: Path) -> None:
     _REPO_ROOT = path.resolve()
 
 
+def _resolve_repo(repo: str) -> Path:
+    """Resolve repo arg to an absolute path. Always returns _REPO_ROOT for '.'."""
+    return _REPO_ROOT if repo == "." else Path(repo).resolve()
+
+
+def _safe_file_path(repo_root: Path, rel_path: str) -> Path | None:
+    """Resolve rel_path inside repo_root. Returns None if it escapes the root."""
+    try:
+        full = (repo_root / rel_path).resolve()
+        full.relative_to(repo_root)  # raises ValueError if outside
+        return full
+    except ValueError:
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
@@ -65,7 +80,7 @@ def scan_repo(repo: str = ".") -> str:
     from contextos.core.scanner import ScanConfig, scan
     from contextos.core.summarizer import load_summaries, summarize_repo
 
-    repo_path = Path(repo).resolve() if repo != "." else _REPO_ROOT
+    repo_path = _resolve_repo(repo)
     ctx_dir = repo_path / ".contextos"
     ctx_dir.mkdir(parents=True, exist_ok=True)
 
@@ -119,7 +134,7 @@ def pack_context(
     """
     from contextos.core.pack_builder import PackConfig, build_pack
 
-    repo_path = Path(repo).resolve() if repo != "." else _REPO_ROOT
+    repo_path = _resolve_repo(repo)
     ctx_dir = repo_path / ".contextos"
 
     cfg = PackConfig(
@@ -166,7 +181,7 @@ def list_files(
         _select,
     )
 
-    repo_path = Path(repo).resolve() if repo != "." else _REPO_ROOT
+    repo_path = _resolve_repo(repo)
     ctx_dir = repo_path / ".contextos"
 
     summaries = _load_summaries_safe(ctx_dir)
@@ -199,14 +214,17 @@ def get_file(
     """
     from contextos.core.secret_detector import is_secret_file, redact_content
 
-    repo_path = Path(repo).resolve() if repo != "." else _REPO_ROOT
-    full_path = repo_path / rel_path
+    repo_path = _resolve_repo(repo)
 
-    if not full_path.exists():
-        return f"Error: {rel_path} not found in {repo_path}"
+    full_path = _safe_file_path(repo_path, rel_path)
+    if full_path is None:
+        return "Error: path traversal detected — rel_path must stay inside the repo root."
 
     if is_secret_file(rel_path):
         return f"Error: {rel_path} is a secret/credential file — content withheld."
+
+    if not full_path.exists():
+        return f"Error: {rel_path} not found in {repo_path}"
 
     try:
         content = full_path.read_text(encoding="utf-8", errors="replace")
@@ -235,7 +253,7 @@ def get_summary(
 
     from contextos.core.context_selector import _load_summaries_safe
 
-    repo_path = Path(repo).resolve() if repo != "." else _REPO_ROOT
+    repo_path = _resolve_repo(repo)
     ctx_dir = repo_path / ".contextos"
     summaries = _load_summaries_safe(ctx_dir)
 
@@ -264,7 +282,7 @@ def churn_report(
     """
     from contextos.core.git_churn import build_churn_map
 
-    repo_path = Path(repo).resolve() if repo != "." else _REPO_ROOT
+    repo_path = _resolve_repo(repo)
     churn = build_churn_map(repo_path, days=days)
 
     if not churn:
