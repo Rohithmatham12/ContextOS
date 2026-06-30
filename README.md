@@ -109,7 +109,7 @@ ContextOS selects; Headroom compresses. The agent receives maximum signal per to
 ## Quickstart
 
 ```bash
-pip install contextos
+pip install rm-contextos
 ```
 
 ```bash

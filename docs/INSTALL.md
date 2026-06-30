@@ -8,7 +8,7 @@
 ## PyPI (recommended)
 
 ```bash
-pip install contextos
+pip install rm-contextos
 ```
 
 Verify:
@@ -40,7 +40,7 @@ python -m venv .venv
 source .venv/bin/activate        # macOS / Linux
 .venv\Scripts\activate           # Windows
 
-pip install contextos
+pip install rm-contextos
 ```
 
 ## Optional Feature Sets
@@ -48,10 +48,10 @@ pip install contextos
 Install optional extras with pip's bracket syntax:
 
 ```bash
-pip install "contextos[ast]"       # tree-sitter symbol extraction (better ranking)
-pip install "contextos[tokens]"    # tiktoken for accurate token counting
-pip install "contextos[headroom]"  # Headroom compression support
-pip install "contextos[all]"       # everything above
+pip install "rm-contextos[ast]"       # tree-sitter symbol extraction (better ranking)
+pip install "rm-contextos[tokens]"    # tiktoken for accurate token counting
+pip install "rm-contextos[headroom]"  # Headroom compression support
+pip install "rm-contextos[all]"       # everything above
 ```
 
 ## Optional Dependencies
@@ -87,19 +87,19 @@ See [`docs/HEADROOM.md`](HEADROOM.md) for full setup instructions.
 
 ```dockerfile
 FROM python:3.12-slim
-RUN pip install contextos
+RUN pip install rm-contextos
 ```
 
 Or pin a version:
 
 ```bash
-pip install "contextos==0.1.0"
+pip install "rm-contextos==0.1.0"
 ```
 
 ## Upgrading
 
 ```bash
-pip install --upgrade contextos
+pip install --upgrade rm-contextos
 ```
 
 ## Uninstall
