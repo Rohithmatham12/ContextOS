@@ -32,17 +32,20 @@ theme:
 nav:
   - Home: index.md
   - Why ContextOS?: WHY.md
+  - FAQ: FAQ.md
   - Getting Started:
     - Installation: INSTALL.md
     - Usage: USAGE.md
+  - Integrations:
+    - MCP Server: MCP.md
+    - Headroom Compression: HEADROOM.md
+    - MCP Setup (Claude Desktop): MCP_SETUP.md
   - Reference:
     - Architecture: ARCHITECTURE.md
     - Safety Model: SAFETY.md
-    - Headroom Integration: HEADROOM.md
   - Community:
     - Contributing: CONTRIBUTING.md
     - Roadmap: ROADMAP.md
-    - MCP Setup: MCP_SETUP.md
 
 plugins:
   - search

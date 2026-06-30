@@ -1,6 +1,6 @@
 # Roadmap
 
-## v0.1 — MVP (shipped)
+## v0.1 / v0.2 — Shipped
 
 Goal: working CLI that produces useful context packs, no optional dependencies required.
 
@@ -16,24 +16,15 @@ Goal: working CLI that produces useful context packs, no optional dependencies r
 - [x] Headroom integration (`--compress headroom`, `HeadroomCompressionProvider`)
 - [x] Typer CLI: `init`, `scan`, `task`, `pack`, `export`, `memory` commands
 - [x] Example projects: `python_fastapi`, `react_typescript`, `monorepo`
-- [x] Test suite: 930 tests, 96% coverage
+- [x] Test suite: 980 tests, 96% coverage
 - [x] `pyproject.toml`, Apache-2.0 license, GitHub Actions CI
-
----
-
-## v0.2 — AST Intelligence (planned)
-
-Goal: chunk and rank at symbol level, not file level.
-
-- [ ] `tree-sitter` integration (Python, TypeScript, Go)
-- [ ] `SymbolExtractor` — function/class/method names from AST
-- [ ] `GraphBuilder` — import graph with symbol-level edges
-- [ ] AST-mode chunker — function/class chunks, not fixed windows
-- [ ] Import centrality weighted by symbol call frequency
-- [ ] `contextos graph` CLI command — visualise dependency graph
-- [ ] Budget enforcement per-chunk instead of per-file
-
-**Why this matters:** File-level ranking includes the entire file even when only one function is relevant. Symbol-level chunking lets ContextOS include `auth.verify_token()` without pulling in the rest of `auth.py`.
+- [x] AST symbol extraction — tree-sitter (Python, TypeScript, JavaScript)
+- [x] Git churn scoring — recently-modified files ranked higher
+- [x] Incremental scan cache — hash-based, only re-summarizes changed files
+- [x] Token savings report — shows exact reduction vs no ContextOS
+- [x] MCP server — 6 tools: `scan_repo`, `pack_context`, `list_files`, `get_file`, `get_summary`, `churn_report`
+- [x] PyPI: `pip install rm-contextos` / `pip install "rm-contextos[mcp]"`
+- [x] Docs site at https://Rohithmatham12.github.io/ContextOS/
 
 ---
 

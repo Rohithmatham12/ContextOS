@@ -12,7 +12,9 @@ ContextOS solves the context-window problem for AI coding agents. Instead of dum
 ## Install
 
 ```bash
-pip install rm-contextos
+pip install rm-contextos              # base CLI
+pip install "rm-contextos[mcp]"       # + MCP server for AI agents
+pip install "rm-contextos[all]"       # everything (MCP + AST + headroom)
 ```
 
 ## Quick Start
@@ -46,8 +48,12 @@ ContextOS builds an intelligence layer on top of your repo:
 | Secret detection (14 patterns) | Shipped |
 | Keyword + import-graph ranking | Shipped |
 | AST symbol extraction (Python, TS, JS) | Shipped |
+| Git churn scoring | Shipped |
+| Incremental scan cache (hash-based) | Shipped |
 | Token budget enforcement | Shipped |
+| Token savings report | Shipped |
 | Claude / Codex / Cursor / Aider export | Shipped |
+| MCP server (6 tools) | Shipped |
 | Headroom compression | Shipped |
 | tiktoken accurate counting | v0.4 |
 | Embedding-based ranking | v1.0 |

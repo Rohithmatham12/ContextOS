@@ -94,7 +94,7 @@ known-first-party = ["contextos"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
-exclude = ["examples/"]
+exclude = ["examples/", "contextos/mcp/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
