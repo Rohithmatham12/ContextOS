@@ -54,6 +54,9 @@ tokens = [
 headroom = [
     "headroom-ai>=0.1",
 ]
+mcp = [
+    "mcp>=1.0",
+]
 all = [
     "tree-sitter>=0.23",
     "tree-sitter-python>=0.23",
@@ -61,6 +64,7 @@ all = [
     "tree-sitter-typescript>=0.23",
     "tiktoken>=0.7",
     "headroom-ai>=0.1",
+    "mcp>=1.0",
 ]
 dev = [
     "pytest>=8.0.0",

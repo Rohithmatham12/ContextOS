@@ -9,6 +9,7 @@ from contextos.cli.commands import export, memory
 from contextos.cli.commands.init import init_command
 from contextos.cli.commands.pack import pack_command
 from contextos.cli.commands.scan import scan_command
+from contextos.cli.commands.serve import serve_command
 from contextos.cli.commands.task import task_command
 
 app = typer.Typer(
@@ -23,6 +24,7 @@ app.command("init")(init_command)
 app.command("scan")(scan_command)
 app.command("pack")(pack_command)
 app.command("task")(task_command)
+app.command("serve")(serve_command)
 
 # Group commands with sub-commands use add_typer
 app.add_typer(memory.app, name="memory")
