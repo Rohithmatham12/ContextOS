@@ -102,9 +102,7 @@ def extract_symbols(content: str, language: str, rel_path: str) -> FileSymbols:
     return result
 
 
-def _extract_python(
-    node: Any, src: bytes, result: FileSymbols, parent: str | None = None
-) -> None:
+def _extract_python(node: Any, src: bytes, result: FileSymbols, parent: str | None = None) -> None:
     """Walk Python AST, extract function_definition and class_definition nodes."""
     for child in node.children:
         if child.type == "function_definition":
@@ -147,9 +145,7 @@ def _extract_python(
             _extract_python(child, src, result, parent=parent)
 
 
-def _extract_js_ts(
-    node: Any, src: bytes, result: FileSymbols, parent: str | None = None
-) -> None:
+def _extract_js_ts(node: Any, src: bytes, result: FileSymbols, parent: str | None = None) -> None:
     """Walk JS/TS AST, extract function and class declarations."""
     for child in node.children:
         if child.type in ("function_declaration", "function_expression", "arrow_function"):
