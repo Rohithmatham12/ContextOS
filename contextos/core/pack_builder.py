@@ -362,11 +362,23 @@ def _scan_data_valid(contextos_dir: Path) -> bool:
 def _run_scan(repo_root: Path, contextos_dir: Path) -> None:
     from contextos.core.dependency_graph import build_graph, write_graph
     from contextos.core.scanner import ScanConfig, scan
-    from contextos.core.summarizer import summarize_repo
+    from contextos.core.summarizer import load_summaries, summarize_repo
 
     contextos_dir.mkdir(parents=True, exist_ok=True)
     cfg = ScanConfig(max_file_bytes=524288)
     result = scan(repo_root, cfg)
-    summarize_repo(result, output_path=contextos_dir / "file_summaries.json")
+
+    from contextos.core.summarizer import FileSummary
+
+    # Load existing summaries as cache — skip re-summarizing unchanged files
+    existing: dict[str, FileSummary] | None = None
+    summaries_path = contextos_dir / "file_summaries.json"
+    if summaries_path.exists():
+        try:
+            existing = load_summaries(summaries_path)
+        except Exception:  # noqa: BLE001
+            existing = None
+
+    summarize_repo(result, output_path=summaries_path, existing=existing)
     graph = build_graph(result)
     write_graph(graph, contextos_dir / "dependency_graph.json")

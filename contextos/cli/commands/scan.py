@@ -84,11 +84,19 @@ def _write_index_files(repo: Path, result: object, contextos_dir: Path) -> None:
     from contextos.core.dependency_graph import build_graph, write_graph
     from contextos.core.repo_index import build_index, write_project_index
     from contextos.core.scanner import ScanResult
-    from contextos.core.summarizer import summarize_repo
+    from contextos.core.summarizer import load_summaries, summarize_repo
 
     assert isinstance(result, ScanResult)
 
-    summaries = summarize_repo(result, output_path=contextos_dir / "file_summaries.json")
+    summaries_path = contextos_dir / "file_summaries.json"
+    existing = None
+    if summaries_path.exists():
+        try:
+            existing = load_summaries(summaries_path)
+        except Exception:  # noqa: BLE001
+            existing = None
+
+    summaries = summarize_repo(result, output_path=summaries_path, existing=existing)
     index = build_index(repo, result, summaries)
     write_project_index(index, contextos_dir / "PROJECT_INDEX.md")
     graph = build_graph(result)

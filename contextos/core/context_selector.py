@@ -170,6 +170,7 @@ class SelectionConfig:
     memory_bonus: float = 0.15
     snippet_lines: int = 60
     min_score: float = 0.0
+    churn_weight: float = 0.1  # per-commit bonus for recently-modified files (capped at 5)
     no_source: bool = False  # summaries only — never include full files or snippets
     allow_sensitive: bool = False  # if True, skip redaction (dangerous — shows raw secrets)
 
@@ -280,6 +281,10 @@ def _select(
     kw = _keywords(task)
     mem_paths = _extract_memory_paths(memory_content)
 
+    from contextos.core.git_churn import build_churn_map
+
+    churn_map = build_churn_map(repo_root)
+
     # 1. Initial scoring (secret files tracked separately for excluded list)
     scores: dict[str, tuple[float, list[str]]] = {}
     secret_excluded: list[str] = []
@@ -287,7 +292,7 @@ def _select(
         if _is_secret(rel_path):
             secret_excluded.append(rel_path)
             continue
-        score, reasons = _score_file(rel_path, summary, kw, mem_paths, config)
+        score, reasons = _score_file(rel_path, summary, kw, mem_paths, config, churn_map)
         scores[rel_path] = (score, reasons)
 
     # 2. Dependency expansion
@@ -331,6 +336,7 @@ def _score_file(
     keywords: set[str],
     mem_paths: set[str],
     config: SelectionConfig,
+    churn_map: dict[str, int] | None = None,
 ) -> tuple[float, list[str]]:
     score = 0.0
     reasons: list[str] = []
@@ -375,6 +381,16 @@ def _score_file(
     if rel_path in mem_paths or fname in mem_paths:
         score += config.memory_bonus
         reasons.append("memory:mentioned")
+
+    # Git churn bonus — recently-modified files score higher
+    if churn_map:
+        from contextos.core.git_churn import churn_score
+
+        cs = churn_score(rel_path, churn_map, weight=config.churn_weight)
+        if cs > 0:
+            commits = churn_map.get(rel_path, 0)
+            score += cs
+            reasons.append(f"churn:{commits}commits")
 
     return score, reasons
 

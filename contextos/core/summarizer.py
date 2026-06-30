@@ -91,14 +91,27 @@ def summarize_repo(
     result: ScanResult,
     *,
     output_path: Path | None = None,
+    existing: dict[str, FileSummary] | None = None,
 ) -> dict[str, FileSummary]:
-    """Summarize every file in *result*. Writes JSON to *output_path* if given."""
+    """Summarize every file in *result*. Writes JSON to *output_path* if given.
+
+    Pass *existing* (previously-saved summaries) to skip re-summarizing files
+    whose content hash hasn't changed — incremental scan cache.
+    """
     summaries: dict[str, FileSummary] = {}
+    cache_hits = 0
     for entry in result.files:
         try:
             content = entry.path.read_text(encoding="utf-8")
         except OSError:
             continue
+        # Re-use cached summary if content unchanged
+        if existing and entry.rel_path in existing:
+            cached = existing[entry.rel_path]
+            if cached.content_hash == entry.content_hash:
+                summaries[entry.rel_path] = cached
+                cache_hits += 1
+                continue
         summaries[entry.rel_path] = summarize_file(entry, content)
     if output_path is not None:
         write_summaries(summaries, output_path)
