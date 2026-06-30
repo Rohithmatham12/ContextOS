@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from contextos.core.ast_extractor import (
+import pytest
+
+tree_sitter = pytest.importorskip("tree_sitter", reason="tree-sitter not installed")
+
+from contextos.core.ast_extractor import (  # noqa: E402
     FileSymbols,
     SymbolInfo,
     _tokenize_identifier,
