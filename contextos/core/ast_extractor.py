@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -42,31 +43,34 @@ class FileSymbols:
 
 _SUPPORTED = {"python", "typescript", "javascript"}
 
-_LANG_CACHE: dict[str, object] = {}
+_LANG_CACHE: dict[str, Any] = {}
 
 
-def _get_parser(language: str) -> object | None:
+def _get_parser(language: str) -> Any | None:
     """Return a cached tree-sitter Parser for the given language, or None."""
     if language in _LANG_CACHE:
         return _LANG_CACHE[language]
 
     try:
-        from tree_sitter import Language, Parser  # type: ignore[import]
+        from tree_sitter import Language, Parser
 
         if language == "python":
-            import tree_sitter_python as ts_lang  # type: ignore[import]
-        elif language == "typescript":
-            import tree_sitter_typescript as ts_lang  # type: ignore[import]
+            import tree_sitter_python as _tspy
 
-            ts_lang = ts_lang.language_typescript
+            raw = _tspy.language()
+        elif language == "typescript":
+            import tree_sitter_typescript as _tsts
+
+            raw = _tsts.language_typescript()
         elif language == "javascript":
-            import tree_sitter_javascript as ts_lang  # type: ignore[import]
+            import tree_sitter_javascript as _tsjs
+
+            raw = _tsjs.language()
         else:
             _LANG_CACHE[language] = None
             return None
 
-        lang_obj = Language(ts_lang.language() if language != "typescript" else ts_lang())
-        parser = Parser(lang_obj)
+        parser = Parser(Language(raw))
         _LANG_CACHE[language] = parser
         return parser
     except Exception:
@@ -99,7 +103,7 @@ def extract_symbols(content: str, language: str, rel_path: str) -> FileSymbols:
 
 
 def _extract_python(
-    node: object, src: bytes, result: FileSymbols, parent: str | None = None
+    node: Any, src: bytes, result: FileSymbols, parent: str | None = None
 ) -> None:
     """Walk Python AST, extract function_definition and class_definition nodes."""
     for child in node.children:
@@ -144,7 +148,7 @@ def _extract_python(
 
 
 def _extract_js_ts(
-    node: object, src: bytes, result: FileSymbols, parent: str | None = None
+    node: Any, src: bytes, result: FileSymbols, parent: str | None = None
 ) -> None:
     """Walk JS/TS AST, extract function and class declarations."""
     for child in node.children:
