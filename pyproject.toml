@@ -4,11 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rm-contextos"
-version = "0.1.0"
+version = "0.1.1"
 description = "A context operating system for AI coding agents"
-license = { file = "LICENSE" }
+license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = ">=3.11"
+authors = [
+    { name = "Rohith Matam", email = "chintumatham@gmail.com" },
+]
 keywords = ["ai", "agents", "context", "cli", "developer-tools"]
 classifiers = [
     "Development Status :: 3 - Alpha",

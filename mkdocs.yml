@@ -1,0 +1,58 @@
+site_name: ContextOS
+site_description: A context operating system for AI coding agents
+site_url: https://Rohithmatham12.github.io/ContextOS/
+repo_url: https://github.com/Rohithmatham12/ContextOS
+repo_name: Rohithmatham12/ContextOS
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: INSTALL.md
+    - Usage: USAGE.md
+  - Reference:
+    - Architecture: ARCHITECTURE.md
+    - Safety Model: SAFETY.md
+    - Headroom Integration: HEADROOM.md
+  - Community:
+    - Contributing: CONTRIBUTING.md
+    - Roadmap: ROADMAP.md
+    - MCP Setup: MCP_SETUP.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - tables
+  - toc:
+      permalink: true

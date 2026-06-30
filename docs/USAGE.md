@@ -235,7 +235,7 @@ contextos pack . --task "fix auth bug" --budget 8000
 contextos export claude --task "fix auth bug"
 ```
 
-See [`examples/README.md`](../examples/README.md) for walkthroughs of all three examples.
+See the [examples folder](https://github.com/Rohithmatham12/ContextOS/tree/master/examples) for walkthroughs of all three examples.
 
 ---
 
