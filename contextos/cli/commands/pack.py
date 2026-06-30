@@ -151,6 +151,10 @@ def pack_command(
         )
 
     token_est = estimate_tokens(content)
+    repo_total = selection.repo_total_tokens
+    saved = max(0, repo_total - selection.used_tokens)
+    pct = int(saved / repo_total * 100) if repo_total > 0 else 0
+
     console.print(
         f"  Context files: [magenta]~{selection.used_tokens:,}[/magenta] tokens"
         f"  (budget: {budget:,})"
@@ -160,6 +164,21 @@ def pack_command(
         f"  Selected     : [cyan]{len(selection.selected)}[/cyan] files  "
         f"([yellow]{len(selection.excluded)}[/yellow] excluded)"
     )
+    if repo_total > 0:
+        console.print()
+        console.print("  [bold]Token savings vs no ContextOS[/bold]")
+        total_files = len(selection.selected) + len(selection.excluded)
+        console.print(
+            f"    Without ContextOS : [red]~{repo_total:,}[/red] tokens  "
+            f"(entire repo, {total_files} files)"
+        )
+        console.print(
+            f"    With ContextOS    : [green]~{selection.used_tokens:,}[/green] tokens  "
+            f"({len(selection.selected)} files)"
+        )
+        console.print(
+            f"    Saved             : [bold green]~{saved:,} tokens ({pct}% reduction)[/bold green]"
+        )
 
     pack_ext = "json" if fmt == "json" else "md"
     default_out = contextos_dir / f"context_pack.{pack_ext}"

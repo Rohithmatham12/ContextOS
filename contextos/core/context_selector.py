@@ -192,6 +192,7 @@ class ContextSelection:
     selected: list[FileResult]
     excluded: list[str]  # paths excluded by budget or safety rules
     secret_warnings: list[str] = field(default_factory=list)  # redaction log
+    repo_total_tokens: int = 0  # tokens if entire repo were sent (no ContextOS)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -305,6 +306,9 @@ def _select(
     # 5. Budget enforcement
     selected, budget_excluded, warnings = _enforce_budget(ranked, summaries, repo_root, config)
 
+    # Rough repo total: ~4 chars/token, ~60 chars/line average
+    repo_total = sum(s.line_count * 15 for s in summaries.values())
+
     return ContextSelection(
         task=task,
         budget=config.budget,
@@ -312,6 +316,7 @@ def _select(
         selected=selected,
         excluded=secret_excluded + budget_excluded,
         secret_warnings=warnings,
+        repo_total_tokens=repo_total,
     )
 
 
