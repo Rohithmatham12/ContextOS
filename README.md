@@ -1,6 +1,7 @@
 # ContextOS
 
 [![CI](https://github.com/Rohithmatham12/ContextOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Rohithmatham12/ContextOS/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/rm-contextos.svg)](https://pypi.org/project/rm-contextos/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
@@ -424,7 +425,7 @@ git clone https://github.com/Rohithmatham12/ContextOS
 cd ContextOS
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                          # 930 tests, must all pass
+pytest                          # 980 tests, must all pass
 ruff check contextos/ tests/    # zero warnings
 ```
 
