@@ -14,3 +14,5 @@ htmlcov/
 .contextos/
 *.md.bak
 site/
+.DS_Store
+**/.DS_Store
