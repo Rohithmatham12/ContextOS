@@ -162,7 +162,7 @@ class TestDetectAWSKeys:
         assert "aws_secret_access_key" in names
 
     def test_aws_secret_case_insensitive(self) -> None:
-        text = "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLE"
+        text = "aws_secret_access_key=EXAMPLEKEY1234567890EXAMPLEKEY1234567"
         matches = detect_in_content(text)
         names = [m.pattern_name for m in matches]
         assert "aws_secret_access_key" in names
@@ -306,7 +306,7 @@ class TestDetectDatabaseURL:
         assert "database_url" in names
 
     def test_mongodb_url(self) -> None:
-        matches = detect_in_content("mongodb://user:pass1234@cluster0.mongodb.net/db")
+        matches = detect_in_content("mongodb://testuser:REDACTED_FOR_TESTS@cluster0.example.invalid/db")
         names = [m.pattern_name for m in matches]
         assert "database_url" in names
 
@@ -477,7 +477,7 @@ class TestRedactContent:
         assert "abc12345678" not in redacted
 
     def test_db_url_password_redacted(self) -> None:
-        text = "postgresql://user:s3cr3t@host/db"
+        text = "postgresql://testuser:REDACTED_FOR_TESTS@db.example.invalid/testdb"
         redacted, _ = redact_content(text)
         assert "s3cr3t" not in redacted
         assert "REDACTED" in redacted
