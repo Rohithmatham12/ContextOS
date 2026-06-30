@@ -306,7 +306,9 @@ class TestDetectDatabaseURL:
         assert "database_url" in names
 
     def test_mongodb_url(self) -> None:
-        matches = detect_in_content("mongodb://testuser:REDACTED_FOR_TESTS@cluster0.example.invalid/db")
+        matches = detect_in_content(
+            "mongodb://testuser:REDACTED_FOR_TESTS@cluster0.example.invalid/db"
+        )
         names = [m.pattern_name for m in matches]
         assert "database_url" in names
 
