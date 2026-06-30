@@ -43,4 +43,4 @@ def test_version_importable() -> None:
     from contextos import __version__
 
     assert isinstance(__version__, str)
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.1.2"
